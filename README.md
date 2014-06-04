@@ -72,38 +72,17 @@ Here is a sample of a callback function:
     {
 
 If we want to parse GET/POST/Cookies data we do it here.
-This example shows how to read Cookie parameters, it's exactlly the same for POST/GET parameters, we only change nextCookie() to nextPOSTparam() or nextGETparam(). Here we are only interested in reading the name of a cookie called "user_name" and copy its value to a buffer:
+This example shows how to read Cookie parameters, it's exactlly the same for POST/GET parameters, we only change readCookieP() to readPOSTParameterP() or readgetParameterP(). Here we are only interested in reading the name of a cookie called "user_name" and copy its value to a buffer:
 
-        // Create buffers to read cookie data
-        
-        #define COOKIE_NAME_BUFFER 10
-        #define COOKIE_VALUE_BUFFER 32    
-        char cookie_name[COOKIE_NAME_BUFFER] = "";
-        char cookie_value[COOKIE_VALUE_BUFFER] = "";
-        
-        // Create buffers to store the data we're interested
-        // Set up a default value for the user name in case no cookie is found
-        char user_name[COOKIE_VALUE_BUFFER] = "Anonymous";
-        
-        // Go through all the cookies untill we find the ones we want.
-        // In this case we want a cookie called user_name.
-        while ( true ) 
-        {
-            // Get the next cookie sent by the browser
-            byte result = server.nextCookie( cookie_name, COOKIE_NAME_BUFFER, 
-                                             cookie_value, COOKIE_VALUE_BUFFER);
-            // If there are no more cookies to check, we're finished here
-            if (result != WEBBYDUINO_PARAMETER_OK)  break;
-            
-            // If we find the right cookie, copy the parameter to the name buffer
-            if (strcmp_P(cookie_name, PSTR("user_name")) == 0)
-            {  
-                strcpy (user_name, cookie_value);
-                // Stop here, we don't care about any other cookies
-                break;
-            }
-        }    
-        
+    // Create buffers to store the data we're interested
+    #define PARAMETER_VALUE_BUFFER 32    
+    // Creates an emty buffer to read the user name
+    char user_name[PARAMETER_VALUE_BUFFER] = "";
+    
+    // Reads the value of the cookie "user_name" to the buffer
+    // If the cookie does not exist,  user_name remains unchanged (empty)
+    server.readCookieP(PSTR("user_name"), user_name, PARAMETER_VALUE_BUFFER)
+
 After processing the incoming data and performing the desired actions, we need to send the reply to the server.
 First we send the HTTP headers indicating the request was succecefull:
         server.httpSuccess();
@@ -135,7 +114,7 @@ Now we send the actual content of the reply. We can user server.print() and serv
             "</html>\n" ));
             
 Return 1 if everything went well with the request.
-Returning 0 results in a 404. After httpSuccess() always use return 1. All necessary validations need to be checked before before httpSuccess().
+Returning 0 results in a 404. After calling httpSuccess() always use return 1. All necessary validations that may result in an error (return 0) need to be checked before before calling httpSuccess().
 
         return 1;
     }
@@ -203,7 +182,7 @@ Alternativelly, the pages can be acessible to different user levels, but show di
 
     server.getClientLevel();
 
-to discover the user level of the client that performed the request and user that information when constructing the repl
+to discover the user level of the client that performed the request and use that information when constructing the reply.
 
 ### Customize your server
 This step is optional, but it's recommended once you're acquainted with the library. Since the arduino is very low on resources when compared to a PC, it's recommended to disable the features of the server that are not going to be used. This saves precious program memory, decreases RAM usage and makes the server process the requests faster. Edit the file "Webbyduino.h", look for the following lines and comment the ones related to features you do not want to use.
