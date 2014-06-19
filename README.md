@@ -64,37 +64,47 @@ All it takes now is to call the processConnection() method often on the loop and
 
 ### Creating callback functions
 
-Callback functions are called when the server receives specific requests. They can be used to perform any task before sending a reply to the client that performed the request. When processing the callback functions we have access to all the data sent by the client.
+Callback functions are called when the server receives specific requests. They can be used to perform any task before sending a reply to the client that sent the request. When processing the callback functions we have access to all the data sent by the client.
 
-Here is a sample of a callback function:
+Here is a sample of a callback function that responds with a simple HTML page saying "Hello World":
 
-    int fileServerPage(Webbyduino &server)
+    int myHomepage(Webbyduino &server)
     {
+        // Before sending the actual reply we need to send the headers indicating 
+        // everything went ok and we are atarting to send the reply
+        server.httpSuccess();   // No parameters assumes we're sending HTML
+        // Now we send the actual HTML code for the response
+        server.print( F(
+            "<!DOCTYPE html>\n"
+            "<html>\n"
+            "<head>\n"
+            "<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />\n"
+            "<title>Webbyduino Server</title>\n"
+            "</head>\n"
+            "<body>\n"
+                "Hello World"));
+            "</body>\n"
+            "</html>\n" ));
+        return 1;
+    }
+Return 1 if everything went well with the request.
+Returning 0 results in a 404. After calling httpSuccess() always use return 1. All necessary validations that may result in an error (return 0) need to be checked before before calling httpSuccess().
 
-If we want to parse GET/POST/Cookies data we do it here.
-This example shows how to read Cookie parameters, it's exactlly the same for POST/GET parameters, we only change readCookieP() to readPOSTParameterP() or readgetParameterP(). Here we are only interested in reading the name of a cookie called "user_name" and copy its value to a buffer:
-
-    // Create buffers to store the data we're interested
-    #define PARAMETER_VALUE_BUFFER 32    
-    // Creates an emty buffer to read the user name
-    char user_name[PARAMETER_VALUE_BUFFER] = "";
     
-    // Reads the value of the cookie "user_name" to the buffer
-    // If the cookie does not exist,  user_name remains unchanged (empty)
-    server.readCookieP(PSTR("user_name"), user_name, PARAMETER_VALUE_BUFFER)
+If we want to parse GET/POST/Cookies data we can access it inside this function.
+This example demonstrates how to read Cookie parameters. It's exactly the same for POST/GET parameters, we only change readCookieP() to readPOSTParameterP() or readGETParameterP(). In this case we are only interested in reading the name of a cookie called "user_name" and copy its value to a buffer, so the page will say "Hello usernamegoeshere" instead of "Hello World":
 
-After processing the incoming data and performing the desired actions, we need to send the reply to the server.
-First we send the HTTP headers indicating the request was succecefull:
-        server.httpSuccess();
-        
-The default reply type is TEXT/HTML but we can reply with anything else, like JSON formatted data or binary files.
-We can also add caching instructions for the resource. This example would send as image that could be cached for 1 month (2592000 seconds)
+    int myHomepage(Webbyduino &server)
+    {
+        // Create buffers to store the data we're interested
+        #define PARAMETER_VALUE_BUFFER 32    
+        char user_name[PARAMETER_VALUE_BUFFER] = "";
+    
+        // Reads the value of the cookie "user_name" to the buffer
+        // If the cookie does not exist,  user_name remains unchanged (empty)
+        server.readCookieP(PSTR("user_name"), user_name, PARAMETER_VALUE_BUFFER)
 
-        server.httpSuccess(PSTR("image/jpg"), 2592000)
-        
-        
-Now we send the actual content of the reply. We can user server.print() and server.write() depending on the type of data being sent, same as if we were writting to Serial. We can mix constans string with code in the middle to create the pages we desire:
-
+        // This part is similar to the previous one, but we insert the user name in the page
         server.print( F(
             "<!DOCTYPE html>\n"
             "<html>\n"
@@ -105,19 +115,38 @@ Now we send the actual content of the reply. We can user server.print() and serv
             "<body>\n"
                 "Hello "));
                 
-        // Prints either the deafult user name or the value read previously from the user_name cookie
+        // Prints either the deafult user name or the value read previously from the cookie
         server.print(user_name);
         
         // Prints the rest of the HTML page
         server.print( F(
             "</body>\n"
             "</html>\n" ));
-            
-Return 1 if everything went well with the request.
-Returning 0 results in a 404. After calling httpSuccess() always use return 1. All necessary validations that may result in an error (return 0) need to be checked before before calling httpSuccess().
-
         return 1;
     }
+            
+
+Another interesting option, specially if the HTML pages are too big (or too many) to fit in memory is to read them directlly from files on the SD card. Webbyduino can do this automatically, and also replace parts of the file with variables of the program. The next example does exactly the same example as the one above, but ir reads the HTML from a file, replacing the user name with the value read from the cookie:
+
+    int myHomepage(Webbyduino &server)
+    {
+        // Reading the cookie is exactly the same as before
+        #define PARAMETER_VALUE_BUFFER 32    
+        char user_name[PARAMETER_VALUE_BUFFER] = "";
+        server.readCookieP(PSTR("user_name"), user_name, PARAMETER_VALUE_BUFFER);
+        
+        // This line works similar to a #define in C.
+        // When sending the next file, all instances of %USER_NAME will be replaced
+        // with the value of the variable user_name
+        server.addSDFileParameterP(PSTR("USER_NAME"), user_name );
+      
+        // Finally we just need to indicate the file we want to send. The content of
+        // the file is almost the same as in the previous example, but we neem to write
+        // "Hello %USER_NAME" so the value is replaced every time.
+        return server.sendFileHTTP("test.htm");
+    }
+            
+
 
 ### Using Websockets
 
