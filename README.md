@@ -9,16 +9,24 @@ Arduino webserver with support for multiple WebSockets, authentication, cookies,
 - Parses GET, POST and Cookies data from the requests
 - Supports login by HTTP Basic Authentication or by custom Cookies (automatic)
 - Creation of JSON/RESTful interfaces
-
+- Serve files from the SD card, automatically parsing them and replacing variables by their values if necessary.
 
 ## Demo Sketches
 
-The best way to understand how this library works is by trying out the different sample sketches that come with it:
+The best way to understand how this library works is by trying out the different sample sketches. I would suggest checking the samples in this order (increasing complexity):
 
-- Hello Server - A "Hello Word" version of the server, simply creates an HTML page that says "Hello World".
+- WebbyduinoHello - A "Hello Word" version of the server, simply creates an HTML page that says "Hello World".
+
+- WebbyduinoCookies - A server that remembers your name by using cookies. The first time you connect it asks for your name and stores it in a cookie. Once the cookie is set, it always greets you using your name.
+
+
+
+- WebbyduinoChat - A chat server where multiple users can connect simultaneously and talk to each other in a common chatroom. It uses Websockets for the communication between users once they are connected.
+
+- 
+- 
 - Sensor Server - A server that keeps broadcasting the values of different sensors (digital and analog readings from arduino pins in this case) and updating those values on the browser instantly. 
-- Chat Server - A chat server where multiple users can connect simultaneously and talk to each other in a common chatroom. It uses Websockets for the communication between users.
-- Memory Server - A server that remembers your name by using cookies. The first time you connect it asks for your name and stores it in a cookie. Once the cookie is set, it always greets you using your name.
+
 - File server - A file server that allows the users to browse the contents of the SD card and download files from it.
 - Secure server - A server that has different commands which require different user levels to be executed.
 
@@ -97,12 +105,12 @@ This example demonstrates how to read Cookie parameters. It's exactly the same f
     int myHomepage(Webbyduino &server)
     {
         // Create buffers to store the data we're interested
-        #define PARAMETER_VALUE_BUFFER 32    
-        char user_name[PARAMETER_VALUE_BUFFER] = "";
+        #define NAME_MAX_SIZE 32    
+        char user_name[NAME_MAX_SIZE] = "";
     
         // Reads the value of the cookie "user_name" to the buffer
         // If the cookie does not exist,  user_name remains unchanged (empty)
-        server.readCookieP(PSTR("user_name"), user_name, PARAMETER_VALUE_BUFFER)
+        server.readCookieP(PSTR("user_name"), user_name, NAME_MAX_SIZE)
 
         // This part is similar to the previous one, but we insert the user name in the page
         server.print( F(
@@ -126,14 +134,14 @@ This example demonstrates how to read Cookie parameters. It's exactly the same f
     }
             
 
-Another interesting option, specially if the HTML pages are too big (or too many) to fit in memory is to read them directlly from files on the SD card. Webbyduino can do this automatically, and also replace parts of the file with variables of the program. The next example does exactly the same example as the one above, but ir reads the HTML from a file, replacing the user name with the value read from the cookie:
+Another interesting option, specially if the HTML pages are too big (or too many) to fit in the Arduino memory is to read them directlly from files on the SD card. Webbyduino can do this automatically, and also replace parts of the file with variables of the program. The next example does exactly the same example as the one above, but ir reads the HTML from a file, replacing the user name with the value read from the cookie:
 
     int myHomepage(Webbyduino &server)
     {
         // Reading the cookie is exactly the same as before
-        #define PARAMETER_VALUE_BUFFER 32    
-        char user_name[PARAMETER_VALUE_BUFFER] = "";
-        server.readCookieP(PSTR("user_name"), user_name, PARAMETER_VALUE_BUFFER);
+        #define NAME_MAX_SIZE 32    
+        char user_name[NAME_MAX_SIZE] = "";
+        server.readCookieP(PSTR("user_name"), user_name, NAME_MAX_SIZE);
         
         // This line works similar to a #define in C.
         // When sending the next file, all instances of %USER_NAME will be replaced
