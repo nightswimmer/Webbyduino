@@ -15,34 +15,78 @@ Arduino webserver with support for multiple WebSockets, authentication, cookies,
 
 The best way to understand how this library works is by trying out the different sample sketches. I would suggest checking the samples in this order (increasing complexity):
 
-- WebbyduinoHello - A "Hello Word" version of the server, simply creates an HTML page that says "Hello World".
+- WebbyduinoHello - "Hello Word" version of the server, simply creates an HTML page that says "Hello World".
+
+- WebbyduinoReadAnalogSD - Open a page with the values from the analog pins. The page is stored on the SD card and the values of the readings are replaced every time the page is accessed.
 
 - WebbyduinoCookies - A server that remembers your name by using cookies. The first time you connect it asks for your name and stores it in a cookie. Once the cookie is set, it always greets you using your name.
 
-
-
 - WebbyduinoChat - A chat server where multiple users can connect simultaneously and talk to each other in a common chatroom. It uses Websockets for the communication between users once they are connected.
 
-- 
-- 
-- Sensor Server - A server that keeps broadcasting the values of different sensors (digital and analog readings from arduino pins in this case) and updating those values on the browser instantly. 
+- WebbyduinoHTTPServer - HTTP server running from the SD card. Acessing the root of the server opens the file "index.htm" from the card.
 
-- File server - A file server that allows the users to browse the contents of the SD card and download files from it.
-- Secure server - A server that has different commands which require different user levels to be executed.
+- WebbyduinoFileBrowser - Similar to the HTTP Server, but allows navigating through all the existing directories on the card and downloading every file.
 
+- WebbyduinoControlIO - Control the state of output pins from the browser, and also see the state of the analog pins in real-time. Every update is broadcasted to all connected clients using websockets.
+
+- WebbyduinoLedRGB - Control a RGB LED from the browser using 3 sliders for the different colors. All the sliders on every connected client are updated whenever anything changes in one of them.
+ 
+- WebbyduinoLedRGB_SD - Same as WebbyduinoLedRGB, but the web page is stored on the SD card instead of the Arduino memory. This is more convenient when having large pages/scripts.
+
+- WebbyduinoSecurity - A server with a few sample pages with different access level restrictions. Different user logins are necessary to access the different pages.
+
+
+### Memory issues
+This library offers a lot of features, which unfortunatelly all add up when considering memory usage. Fortunatelly it is possible to reduce the memory usage by removing the unwanted features from the code. This can be done simply by removing specific #defines in the beginning of the "Webbyduino.h" file. By default, all the features on the library are enabled, just comment the ones not in use:
+
+    // Enable support for GET parameters
+    #define WEBBYDUINO_ENABLE_GET
+    
+    // Enable support for POST parameters
+    #define WEBBYDUINO_ENABLE_POST
+    
+    // Enable websockets functionality
+    #define WEBBYDUINO_ENABLE_WEBSOCKETS
+    
+    // Enable parsing parameters on received websocket messages
+    // (assumes websocket messages follow the POST/GET parameter syntax)
+    #define WEBBYDUINO_ENABLE_WEBSOCKETS_PARAMETERS
+    
+    // Enable support for Cookies
+    #define WEBBYDUINO_ENABLE_COOKIES
+    
+    // Enable support for users
+    #define WEBBYDUINO_ENABLE_USERS
+    
+    // Enables login functionality using Basic Authentication
+    #define WEBBYDUINO_ENABLE_AUTHENTICATION_BASIC
+     
+    // Enables (automatic) login functionality using cookies and POST data 
+    #define WEBBYDUINO_ENABLE_AUTHENTICATION_COOKIES
+    
+    // Enables serving files from the SD card
+    #define WEBBYDUINO_ENABLE_SD_CARD
+
+Additionally, when not using the SD card the line
+    
+    #include "SD.h"
+    
+should also be removed from the main sketch file.
+    
 
 ## Getting started
 
 ### Create your server
 
-To create a server, initialize the ethernet normally and create the server object. The server can be initialized with 3 optionl parameters:
+To create a server, initialize the ethernet normally and create the server object. The server can be initialized with 3 optional parameters:
 
     // Default initialization
     Webbyduino webserver;  
-    // Custom Initialization
-    Webbyduino(const char *homepage = "/", int port = 80, byte maximum_websockets = 3);
+    // Custom initialization
+    // Webbyduino(const char *homepage = "/", int port = 80, byte maximum_websockets = 3);
+    Webbyduino( "/home/", 88, 2);
 
-With the custom initialization we can specify the root directory of the site, the port used for the server, and the maximum number of simultaneous websockets allowed.
+With the custom initialization we can override the settings for the root directory of the site, the port used for the server, and the maximum number of simultaneous websockets allowed.
 
 
 In the setup() we need to specify the pages/commands we want to serve
