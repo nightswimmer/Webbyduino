@@ -180,7 +180,7 @@ This example demonstrates how to read Cookie parameters. It's exactly the same f
             
 ##### Sending data from a SD file
 
-Another interesting option, specially if the HTML pages are too big (or too many) to fit in the Arduino memory is to read them directlly from files on the SD card. Webbyduino can do this automatically, and also replace parts of the file with variables of the program. The next example does exactly the same example as the one above, but it reads the HTML from a file, replacing the user name with the value read from the cookie:
+Another interesting option, specially if the HTML pages are too big (or too many) to fit in the Arduino memory is to read them directlly from files on the SD card. Webbyduino can do this automatically, and also replace parts of the file with variables of the program. The next example does exactly the same as the previous one, but it reads the HTML from a file, replacing the user name with the value read from the cookie:
 
     int myHomepage(Webbyduino &server)
     {
@@ -262,7 +262,7 @@ We can send websocket messages anytime, not just when the browser sends somethin
 
 Cookies are used to store data on each browser. The server sends the cookies to the browser when it replies to an HTTP request. We add the cookies when processing the data in the callback functions for the commands:
 
-    // Add cookies to the replys using lines like these
+    // Add cookies to the replies using lines like these
     sendCookie("user_name", "Jane");
     
 Any number of cookies can be added, and they are sent when server.httpSuccess() is called, so it's really importate to declare them all before that.
@@ -303,4 +303,4 @@ This library was tested with Arduino Ethernet, Uno and Mega with Ethernet shield
 
 ## Version History
 
-### 1.0 released in 2014-06-? (soon :P)
+### 1.0 released in 2014-06-? (soon-ish :P)
