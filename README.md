@@ -17,7 +17,7 @@ The best way to understand how this library works is by trying out the different
 
 - WebbyduinoHello - "Hello Word" version of the server, simply creates an HTML page that says "Hello World".
 
-- WebbyduinoReadAnalogSD - Open a page with the values from the analog pins. The page is stored on the SD card and the values of the readings are replaced every time the page is accessed.
+- WebbyduinoReadAnalogSD - Open a page with the values from the analog pins. The page is stored on the SD card and the values of the readings are inserted in marked positions in the file every time the page is accessed.
 
 - WebbyduinoCookies - A server that remembers your name by using cookies. The first time you connect it asks for your name and stores it in a cookie. Once the cookie is set, it always greets you using your name.
 
@@ -82,6 +82,7 @@ To create a server, initialize the ethernet normally and create the server objec
 
     // Default initialization
     Webbyduino webserver;  
+    
     // Custom initialization
     // Webbyduino(const char *homepage = "/", int port = 80, byte maximum_websockets = 3);
     Webbyduino( "/home/", 88, 2);
@@ -95,12 +96,12 @@ We should specify what the server opens when we access the root of the site:
 
     webserver.setCommandDefault(&myHomepage);
 
-myHomepage if a callback for whatever we want to do when someone accesses the root of the site. In this callback function we can access received POST, GET and Cookie data from the request, and decide how to reply.
+myHomepage if a callback for whatever we want to do when someone accesses the root of the site. We can reply with a webpage or file, run some code or the arduino, or combine all these options. In this callback function we can access received POST, GET and Cookie data from the request, and decide how to reply.
 
 If we want to add more commands, just use the method below and add more callback functions.
 
      
-We can also set a default callback for when all other fail. This is useful specially to serve files from a SD card. We can have the commands we want using the callbacks above, and when the requests don«t match any of the known commands the default callback checks if it matches something on the SD card.
+We can also set a default callback for when all others fail. This is useful specially to serve files from a SD card. We can have the commands we want using the callbacks above, and when the requests don«t match any of the known commands the default callback checks if it matches something on the SD card.
 
     webserver.setCommandDefault(&fileServerPage);
     
@@ -109,7 +110,7 @@ All it takes now is to call the processConnection() method often on the loop and
         void loop()
         {
             // Process incoming connections to the webserver
-            webserver.processConnection();
+            webserver.run();
             
             // More code can be added here if necessary    
         }
@@ -140,7 +141,7 @@ Here is a sample of a callback function that responds with a simple HTML page sa
         return 1;
     }
 Return 1 if everything went well with the request.
-Returning 0 results in a 404. After calling httpSuccess() always use return 1. All necessary validations that may result in an error (return 0) need to be checked before before calling httpSuccess().
+Returning 0 results in a 404 reply. After calling httpSuccess() always use return 1. All necessary validations that may result in an error (return 0) should be checked before before calling httpSuccess().
 
 ##### Acessing GET/POST/Cookies data 
     
@@ -190,13 +191,13 @@ Another interesting option, specially if the HTML pages are too big (or too many
         server.readCookieP(PSTR("user_name"), user_name, NAME_MAX_SIZE);
         
         // This line works similar to a #define in C.
-        // When sending the next file, all instances of %USER_NAME will be replaced
-        // with the value of the variable user_name
+        // When sending the next file, all instances of %USER_NAME in the file will be 
+        // replaced with the value of the variable user_name
         server.addSDFileParameterP(PSTR("USER_NAME"), user_name );
       
         // Finally we just need to indicate the file we want to send. The content of
         // the file is almost the same as in the previous example, we only need to 
-        // indicate where the user name will appear. This is donw by simply writting
+        // indicate where the user name will appear. This is done by simply writting
         // "Hello %USER_NAME" so the parser knows where to replace the variable.
         return server.sendFileHTTP("test.htm");
     }
@@ -299,8 +300,6 @@ to discover the user level of the client that performed the request and use that
 
 ## Compatibility
 
-This library was tested with Arduino Ethernet, Uno and Mega with Ethernet shields. It should be compatible with any arduino clone that has at least 32Kb of memory and uses the Wiznet 5100 chip for the ethernet.
+This library was tested with Arduino Ethernet, Uno and Mega with Ethernet shields. It should be compatible with any arduino clone that has at least 32Kb of memory and is compatible with the arduino Ethernet library.
 
-## Version History
 
-### 1.0 released in 2014-06-? (soon-ish :P)
